@@ -68,7 +68,7 @@ if entered_key == specific_key:
             print("An error occurred while accessing the CSV file:", e)
 
             
-        data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
+        #data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
 
 
         #if update_code == access_code:
