@@ -213,7 +213,7 @@ if entered_key == specific_key:
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 
         # Set up credentials using the service account file
-        creds = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\User\Downloads\studied-indexer-431906-h1-b8e07c75772f.json", scope)
+        #creds = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\User\Downloads\studied-indexer-431906-h1-b8e07c75772f.json", scope)
 
         # Authorize the client
         client = gspread.authorize(creds)
