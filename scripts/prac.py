@@ -210,22 +210,22 @@ if entered_key == specific_key:
             combined_df = create_feedback_dataframe(email_phone,student_class, college_name, selected_option, '', '', '', '', Major_takeaway, selected_value, input,timestamp_str)
 
 
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        supabase_credentials_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjgzNzM3NywiZXhwIjoxNzU4MzczMzc3fQ.Pl6qNuXIuRDXMnFm0VJx2GamlvfNx8_otpZ8PdFnwVw&t=2024-09-20T13%3A02%3A56.284Z'
 
-        # Fetch the service account credentials file from Supabase storage
-        supabase_credentials_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjgzNDQzOCwiZXhwIjoxNzU4MzcwNDM4fQ._hC66AkufQ8buNu5648t2c3qow1RfzVyFuc_s6XhtNc&t=2024-09-20T12%3A13%3A56.307Z'
+        # Fetch service account credentials from Supabase storage
         response = requests.get(supabase_credentials_url)
 
-        # Check if the request was successful
         if response.status_code == 200:
         # Decode the content of the response as a JSON keyfile and create service account credentials
             service_account_info = response.json()
-            creds = service_account.Credentials.from_service_account_info(service_account_info)
-            # Authorize the client
-            client = gspread.authorize(creds)
-
     
-        # Now 'creds' contains the service account credentials that can be used for authentication
+        # Use the service account info to create credentials
+            creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=['https://www.googleapis.com/auth/spreadsheets'])
+            client = gspread.authorize(creds)
+        # Obtain an access token for the specified scope
+            access_token = creds.token
+
+        # The access_token variable now contains the access token that can be used to authenticate requests to the Google API
         else:
             print("Failed to fetch the service account credentials. Status code:", response.status_code)
 
