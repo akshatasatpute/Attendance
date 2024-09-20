@@ -18,3 +18,4 @@ setuptools==75.1.0
 pyperclip==1.8.2
 supabase==2.5.1
 google-api-python-client==2.144.0
+gspread==6.1.2
