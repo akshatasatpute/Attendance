@@ -27,6 +27,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
+
 specific_key = '123456'  # Specific key required for access
 
 @st.cache_data # Decorator to cache the random number
@@ -52,10 +54,24 @@ if entered_key == specific_key:
         except ValueError:
             st.write('Please enter a valid numeric access code.')
 
+        
+        file_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/General%20Information%20source.csv?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svR2VuZXJhbCBJbmZvcm1hdGlvbiBzb3VyY2UuY3N2IiwiaWF0IjoxNzI2ODMzNzExLCJleHAiOjE3NTgzNjk3MTF9.uSfuVCQQnXyDJibKm5rz7uZXzhZd--1SvWpQixEqFhE&t=2024-09-20T12%3A01%3A49.688Z'
+        # Make a GET request to the URL to retrieve the CSV file
+        try:
+            response = requests.get(file_url)
+            response.raise_for_status()  # Raise an error for bad status codes
+
+            # Read the content of the response as a pandas DataFrame, specifying the appropriate encoding
+            data = pd.read_csv(BytesIO(response.content), encoding='latin1')  # You can try 'latin1' encoding as an alternative
+            # Proceed with processing the data in the dataframe 'df'
+        except requests.exceptions.RequestException as e:
+            print("An error occurred while accessing the CSV file:", e)
+
+            
         data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
 
 
-                #if update_code == access_code:
+        #if update_code == access_code:
         email_phone = st.text_input("Enter the email ID that you use to login to the VigyanShaala app/platform *:")
         if not email_phone in data['Email'].values:
             st.error("Please fill in all the compulsory fields marked with * before proceeding.")
