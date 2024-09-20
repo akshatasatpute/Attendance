@@ -9,7 +9,7 @@ from io import StringIO  # Import StringIO directly from the io module
 from io import BytesIO
 from datetime import datetime
 import random
-
+from google.oauth2 import service_account
 
 # Function to get the current timestamp
 def get_timestamp():
@@ -68,7 +68,7 @@ if entered_key == specific_key:
             print("An error occurred while accessing the CSV file:", e)
 
             
-        #data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
+        data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
 
 
         #if update_code == access_code:
@@ -212,12 +212,25 @@ if entered_key == specific_key:
 
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 
+        # Fetch the service account credentials file from Supabase storage
+        supabase_credentials_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjgzNDQzOCwiZXhwIjoxNzU4MzcwNDM4fQ._hC66AkufQ8buNu5648t2c3qow1RfzVyFuc_s6XhtNc&t=2024-09-20T12%3A13%3A56.307Z'
+        response = requests.get(supabase_credentials_url)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+        # Decode the content of the response as a JSON keyfile and create service account credentials
+            service_account_info = response.json()
+            creds = service_account.Credentials.from_service_account_info(service_account_info)
+            # Authorize the client
+            client = gspread.authorize(creds)
+
+    
+        # Now 'creds' contains the service account credentials that can be used for authentication
+        else:
+            print("Failed to fetch the service account credentials. Status code:", response.status_code)
+
         # Set up credentials using the service account file
         #creds = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\User\Downloads\studied-indexer-431906-h1-b8e07c75772f.json", scope)
-
-        # Authorize the client
-        client = gspread.authorize(creds)
-
 
         # Create a button in Streamlit
         combined_button_text = "Print"
