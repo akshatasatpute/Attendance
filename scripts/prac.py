@@ -1,15 +1,20 @@
-import pandas as pd
+#import necessary libraries
 import streamlit as st
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import os
+import pandas as pd
+import pyperclip  # Import the pyperclip module for clipboard operations
 import requests
-#from supabase_py import create_client,Client
 from io import StringIO  # Import StringIO directly from the io module
 from io import BytesIO
 from datetime import datetime
-import random
+from supabase import create_client, Client
+from supabase.client import ClientOptions
+import tempfile
+from googleapiclient.discovery import build
 from google.oauth2 import service_account
+from googleapiclient.http import MediaFileUpload
+import os
+from PIL import Image
+
 
 
 # Function to get the current timestamp
@@ -24,237 +29,195 @@ st.markdown(
 )
 
 st.markdown(
-    "<h1 style='color: black; font-weight: bold;'>Live Sessions: Attendance & Feedback</h1>", 
+    "<h1 style='color: black; font-weight: bold;'>Kalpana - She for STEM Accelerator 3.0 | Mentor Registration Form</h1>", 
     unsafe_allow_html=True
 )
 
 
+Name=st.text_input("Enter your full name")
+Email_id=st.text_input("Enter your email address")
+Number=st.text_input("Enter your WhatsApp number (with country code, DONOT ADD '+' ")
+Profile=st.text_input("Enter your LinkedIn profile link here")
+Institute=st.text_input("Enter your current Institute/University/Organization")
+Current_job=st.text_input("Current Job title/Designation*")
+primary_key = f"{Number}_{Name}"
 
-# Fetch the service account credentials from the environment variable or any secure location
-# Assume the credentials are fetched and stored in service_account_info
-# Fetch service account credentials from Supabase storage
-supabase_credentials_url = "https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjkwMzEzNywiZXhwIjoxNzU4NDM5MTM3fQ.d-YWFIIV3ue7eUwUIemVHKrxVSgsdy3Dm34bCfkKBPE&t=2024-09-21T07%3A18%3A57.318Z"
-response = requests.get(supabase_credentials_url)
-    
-if response.status_code == 200:
-    # Decode the content of the response as a JSON keyfile and create service account credentials
-    service_account_info = response.json()
-        
+selected_optionss = st.radio("Highest degree obtained *", ("B.Sc.","M.Sc.","B.E./B.Tech.","M.Tech.","B.Pharm.","M.Pharm.","MBA","Ph.D.","Other:"))
+if selected_optionss == "Other":
+    other_response = st.text_input("Other:")
 
-# Use the service account info to create credentials
-creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=['https://www.googleapis.com/auth/spreadsheets'])
-client = gspread.authorize(creds)
+country_names = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","The Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin",
+"Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon",
+"Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo, Democratic Republic of the Congo", "Republic of the","Costa Rica",
+"Côte d’Ivoire","Croatia","Cuba","Cyprus","Czech Republic","Denmark",
+"Djibouti","Dominica","Dominican Republic","East Timor (Timor-Leste)","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini",
+"Ethiopia","Fiji","Finland","France","Gabon","The Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana"
+"Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya",
+"Kiribati","Korea", "North Korea", "South Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
+"Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia, Federated States of","Moldova",
+"Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar (Burma)","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger",
+"Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal",
+"Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia",
+"Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","Spain","Sri Lanka",
+"Sudan","Suriname","Swaziland","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia",
+"Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu",
+"Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"]
+selected_status = st.selectbox('Country you currently reside in*', country_names)
 
-# Define the sheet key
-sheet_key = '175j97xicFqFA1eKPBjzXzQJaKyIfaJYwpwhaL6qGFDg'
+city=st.text_input("Your current city*")
 
-# Open the Google Sheet by key and retrieve the specific worksheet
-sheet = client.open_by_key(sheet_key).sheet1  # Update with the correct sheet name or index
+options = ['English','Hindi','Marathi','Malayalam','Kannada','Telgu','Assamese','Bengali','Gujarati','Manipuri','Tamil','Odia','Punjabi','Urdu','Maithili','Konkani','Kashmiri']
+selected_options = st.multiselect("What communication languages are you comfortable in? * ", options)
 
-# Fetch the number from the Google Sheet at row index 1
-number_from_sheet = sheet.cell(1, 1).value
+language=st.text_input("List two languages (other than english) you are proficient in speaking, reading and writing. Example Hindi, Marathi.*")
+option = st.radio("Would you be available to participate in a two-hour training session at the start of the program?", ("Yes","No"))
 
-# Create a text input box for the user to enter the code
-entered_code = st.text_input("Enter the code")
+options = ['Basic Science-Physics','Basic Science-Chemistry','Basic Science-Life Science, Bio Chemistry','Basic Science-Botany/Zoology','Basic Science-Microbiology, Molecular Biology','Engg-BSC,BCA,IT,Computer Science','Engg-Mechanical,Civil,Production,Industrial,Mining','Engg- Electronics, Electronics and Telecomm,Electrical','Engg-Chemical/Mettalurgical/Material Science Engineering', 'Sp1: Agricultural, Aerospace/Aeronautical, Biomed/Bio Tech','Sp2:Marine,Petroleum,Thermal,Power plant,Nuclear','Not Applicable','Others']
+selected_option = st.selectbox(' Main Subject Area (In case of no specialization, choose your favourite subject area)*', options)
 
-# Check if the entered code matches the number from the Google Sheet
-if entered_code == number_from_sheet:
-    st.write("Code matched! Further functionalities can now run.")
+keyword=st.text_input("Give us three keywords that associated with your current STEM work.*")
+description=st.text_input("How would you explain your current work to a broad undergraduate STEM community? [Max 50 words]")
+option2 = st.radio("How many hours per week are you wiling to commit for this mentoring program?", ("1-2","2-3","3-4","4-5",">5"))
+option3 = st.radio("For conducting mentoring sessions, please indicate your preferred time slots (IST).", ("9 am - 12:00 noon IST","12 noon - 3 pm IST","3 pm - 6 pm IST","6 pm - 9 pm IST","9 pm - 12:00 am midnight IST"))
+skills=st.text_input("What 4 technical skills/soft skills can you share with the mentees?*")
+option4 = st.radio("Would you like to design a hands-on scientific project for this mentoring program?", ("Yes","No"))
 
-        
-    file_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/General%20Information%20source.csv?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svR2VuZXJhbCBJbmZvcm1hdGlvbiBzb3VyY2UuY3N2IiwiaWF0IjoxNzI2ODMzNzExLCJleHAiOjE3NTgzNjk3MTF9.uSfuVCQQnXyDJibKm5rz7uZXzhZd--1SvWpQixEqFhE&t=2024-09-20T12%3A01%3A49.688Z'
-    # Make a GET request to the URL to retrieve the CSV file
-    try:
-        response = requests.get(file_url)
-        response.raise_for_status()  # Raise an error for bad status codes
-
-        # Read the content of the response as a pandas DataFrame, specifying the appropriate encoding
-        data = pd.read_csv(BytesIO(response.content), encoding='latin1')  # You can try 'latin1' encoding as an alternative
-        # Proceed with processing the data in the dataframe 'df'
-    except requests.exceptions.RequestException as e:
-        print("An error occurred while accessing the CSV file:", e)
-
-            
-    #data = pd.read_excel(r"C:\Users\User\Downloads\General Information Source.xlsx")
-
-
-    #if update_code == access_code:
-    email_phone = st.text_input("Enter the email ID that you use to login to the VigyanShaala app/platform *:")
-    if not email_phone in data['Email'].values:
-        st.error("Please fill in all the compulsory fields marked with * before proceeding.")
-        st.stop()
+if_yes=st.text_input("If yes, how would you design a home-lab based and/or computational hands-on scientific project for mentoring Kalpana fellows?")
 
 
-    # Split the input into email and phone number
-    email = ""
-    phone = ""
-    if "@" in email_phone:  # Check if the input contains '@', assuming it's an email
-        email = email_phone
-    else:  # If '@' is not found, assume it's a phone number
-        phone = email_phone
+# Upload the file using Streamlit
+uploaded_file = st.file_uploader("Upload your Curriculum Vitae/Resume *", accept_multiple_files=False, type=["pdf", "csv", "txt"])
 
-    if email in data['Email'].values:
-        # Get the associated information (college name, class) for the entered email or phone
-        user_info = data[(data['Email'] == email_phone)]
-    
-        # Display the entered email and phone number
-        st.write("Entered Email ID:", email)
-    
-    
-        # Check if the email or phone exists in the data
-        if not user_info.empty:
-            for index, row in user_info.iterrows():
-                college_name = row['Name of College']
-                student_class = row['Name']
-            
-            
-        else:
-            st.error("Entered Email ID or Phone number does not match any records in the data. Please fill in all the compulsory fields marked with * before proceeding.")
-            st.stop()
-
-    st.write("College Name:", college_name)
-    st.write("Name:", student_class)
-    # Create a dot button with options arranged horizontally
-    selected_option = st.radio("Select the type of live session you attended today. (Refer Program Calendar*:", ("Special AMA Session", "Live Speak Up Kalpana session", "Live Masterclass Session","Live Mentee mixer event","Live Workshop","Live Kalpana- She for STEM Inauguration","Live Orientation Session"))
-
-    # Use the selected_option
-    st.write("You have selected:", selected_option)
-
-    if selected_option == "Live Speak Up Kalpana session":
-
-        # Create a dot button with options arranged horizontally
-        option1 = st.radio("Prior to today's talk, have you had an opportunity to hear and interact with women role models from these STEM fields?:", ("Yes","No"))
-
-        option = st.radio("Did today's talk introduce you to:", 
-                ("Exposure to New field of STEM careers",
-                   "Thinking broadly for careers and opportunities in STEM",
-                   "Skills and qualities required to excel in these STEM careers (cross disciplinarity and interdisciplinary thinking, computational skills, social surveys, teaching children about ecology)",
-                   "Importance of Networking - both peer networking and networking with seniors (especially from various other disciplines)",
-                   "None of the above", 
-                "Other"))
-
-        if option == "Other":
-            other_response = st.text_input("Other:")
-
-
-        options = st.radio("How Inspiring did you find the session?",("Not Inspiring at all-Boring", 
-                "Not Inspiring",
-                   "Neutral",
-                   "Inspiring",
-                   "Very Inspiring"
-                ))
-
-
-        optionn = st.radio("How relatable did you find our previous Mentees? Can you apply anything to yourself? Did you think, if they can do these big things, So can I?",
-                ("Not relatable at all, very confusing", 
-                   "Not relatable-Do not know what to take",
-                   "Neutral - Neither relatable nor not-relatable",
-                   "Relatable-somewhere i feel, if she can do it, so can I",
-                   "Very Relatable-strong feeling that even i can do it, if they can do it."
-                ))
-
-
-
-
-    Major_takeaway = st.text_area("What are the major takeaways from today's live session*:", height=60)
-
-    # Display the instruction
-    st.write("How would you rate today's live session?:")
-    # Create a placeholder for selected rating
-    selected_rating = None
-    selected_value = st.select_slider("Ratings", options=[1, 2, 3, 4, 5])
-
-    input=st.text_area("Do you have any suggestions to make our Live sessions better?" ,height=30)  
-
-    timestamp = get_timestamp()
-    timestamp_str = str(timestamp)
-    #st.write(f'The current timestamp is: {timestamp_str}')
-
-
-    # Define the function to create the feedback DataFrame
-    def create_feedback_dataframe(email_phone, student_class, college_name, selected_option, option1, option, options, optionn, Major_takeaway, selected_value, input,timestamp_str):
-        if selected_option == "Live Speak Up Kalpana session":
-        # Use the detailed function
-            data = {
-                'Email': [email_phone],
-                'Name': [student_class],
-                'Name of College': [college_name],
-                'Type of live session attended today': [selected_option],
-                "Prior to today's talk, have you had an opportunity to hear and interact with women role models from these STEM fields?": [option1],
-                "Did today's talk introduce you to": [option],
-                "How Inspiring did you find the session?": [options],
-                "How relatable did you find our previous Mentees? Can you apply anything to yourself? Did you think, if they can do these big things, So can I?": [optionn],
-                "Major takeaways from todays live session": [Major_takeaway],
-                "Rate today's live session": [selected_value],
-                "Do you have any suggestions to make our Live sessions better?": [input],
-                "Timestamp":[timestamp_str]
-            }
-        else:
-        #  Use the simpler function
-            data = {
-            'Email': [email_phone],
-            'Name': [student_class],
-            'Name of College': [college_name],
-            'Type of live session attended today': [selected_option],
-            "Prior to today's talk, have you had an opportunity to hear and interact with women role models from these STEM fields?": [''],
-            "Did today's talk introduce you to": [''],
-            "How Inspiring did you find the session?": [''],
-            "How relatable did you find our previous Mentees? Can you apply anything to yourself? Did you think, if they can do these big things, So can I?": [''],
-            "Major takeaways from todays live session": [Major_takeaway],
-            "Rate today's live session": [selected_value],
-            "Do you have any suggestions to make our Live sessions better?": [input],
-            "Timestamp":[timestamp_str]
-            }
-
-        feedback_df = pd.DataFrame(data)
-        return feedback_df
-
-
-    if selected_option == "Live Speak Up Kalpana session":
-        combined_df = create_feedback_dataframe(email_phone,student_class, college_name, selected_option, option1, option, options, optionn, Major_takeaway, selected_value, input,timestamp_str)
-                             
+# Check if the file is uploaded and its size
+if uploaded_file is not None:
+    if len(uploaded_file.getvalue()) <= 10*1024*1024:  # Check if file size is within the limit (10MB)
+        st.write("File uploaded successfully. Ready for analysis.")
     else:
-        combined_df = create_feedback_dataframe(email_phone,student_class, college_name, selected_option, '', '', '', '', Major_takeaway, selected_value, input,timestamp_str)
+        st.write("File size exceeds the limit of 10MB. Please upload a smaller file.")
 
+# Button to trigger upload and analysis
+if st.button("Upload and Analyse File") and uploaded_file is not None:
 
-    supabase_credentials_url = 'https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjgzNzM3NywiZXhwIjoxNzU4MzczMzc3fQ.Pl6qNuXIuRDXMnFm0VJx2GamlvfNx8_otpZ8PdFnwVw&t=2024-09-20T13%3A02%3A56.284Z'
+    # Define the Google Drive API scope
+    PARENT_FOLDER_ID = "14OXiGuiaksXmeTigOtHHRtky7bU8dOpG"
 
-    # Fetch service account credentials from Supabase storage
+    supabase_credentials_url = "https://twetkfnfqdtsozephdse.supabase.co/storage/v1/object/sign/stemcheck/studied-indexer-431906-h1-e3634918ab42.json?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzdGVtY2hlY2svc3R1ZGllZC1pbmRleGVyLTQzMTkwNi1oMS1lMzYzNDkxOGFiNDIuanNvbiIsImlhdCI6MTcyNjkwMzEzNywiZXhwIjoxNzU4NDM5MTM3fQ.d-YWFIIV3ue7eUwUIemVHKrxVSgsdy3Dm34bCfkKBPE&t=2024-09-21T07%3A18%3A57.318Z"
     response = requests.get(supabase_credentials_url)
-
+    
     if response.status_code == 200:
-    # Decode the content of the response as a JSON keyfile and create service account credentials
+        # Decode the content of the response as a JSON keyfile and create service account credentials
         service_account_info = response.json()
-    
-    # Use the service account info to create credentials
-        creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=['https://www.googleapis.com/auth/spreadsheets'])
-        client = gspread.authorize(creds)
-    # Obtain an access token for the specified scope
-        access_token = creds.token
-
-        # The access_token variable now contains the access token that can be used to authenticate requests to the Google API
-    else:
-        print("Failed to fetch the service account credentials. Status code:", response.status_code)
-
-        # Set up credentials using the service account file
-        #creds = ServiceAccountCredentials.from_json_keyfile_name(r"C:\Users\User\Downloads\studied-indexer-431906-h1-b8e07c75772f.json", scope)
-
-    # Create a button in Streamlit
-    combined_button_text = "Print"
-    if st.button(combined_button_text):
-        # Insert the feedback dataframe into the Google Sheet
-        sheet_key = '1B-Rq9OzxCLNN4JKHM5EEhYR1n9efioq9xARnqG0MuWM'
-        sheet_name ='Attendance GUI'
-        sheet = client.open_by_key(sheet_key).get_worksheet(0)  # Update with the correct sheet name or index
-        # Get existing data and determine the next row
-        existing_data = sheet.get_all_values()
-        next_row_index = len(existing_data) + 1
         
-        # Append the new data below the already stored data
-        data_to_insert = combined_df.values.tolist()
-        sheet.update(f'A{next_row_index}', data_to_insert)
-        st.write("Feedback data inserted successfully")
-        st.balloons()
+
+    # Function to upload a CSV file to Google Drive
+    def upload_csv(uploaded_file):
+        try:
+            # Load the credentials from the service account JSON file
+            creds = service_account.Credentials.from_service_account_info(service_account_info,
+                scopes=['https://www.googleapis.com/auth/drive.file']
+            )
+        
+            # Build the Drive service
+            service = build('drive', 'v3', credentials=creds)
+
+            # Create a temporary file to save the uploaded file
+            file_extension = uploaded_file.name.split('.')[-1].lower()  # Get file extension to define MIME type
+            mime_type = 'application/pdf' if file_extension == 'pdf' else 'text/csv' if file_extension == 'csv' else 'text/plain'
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_extension}") as temp_file:
+                temp_file.write(uploaded_file.getbuffer())  # Save the uploaded file to the temp file
+                temp_file_path = temp_file.name  # Get the temp file path
+
+            # Close the temp file explicitly before uploading to Google Drive
+            temp_file.close()
+
+            # Metadata for the file
+            file_metadata = {
+                'name': uploaded_file.name,  # Use the uploaded file name
+                'parents': [PARENT_FOLDER_ID]  # The ID of the folder where the file will be uploaded
+            }
+
+            # Upload the file with appropriate MIME type
+            media = MediaFileUpload(temp_file_path, mimetype=mime_type, resumable=True)
+            file = service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id'
+            ).execute()
+
+            # File uploaded successfully
+            st.success(f"CSV file uploaded successfully with ID: {file.get('id')}")
+
+            # Clean up the temporary file after uploading
+            #os.remove(temp_file_path)
+
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+    # Call the upload function
+    upload_csv(uploaded_file)
+
+comments=st.text_input("If you have any comments, suggestions you want us to think about, please let us know.")
+
+def create_feedback_dataframe(primary_key, Name, Email_id, Number, Profile, Institute, Current_job, selected_optionss, selected_status, city, selected_options, language, option, selected_option, keyword, description, option2, option3, skills, option4, if_yes,uploaded_file,comments):
+    data = {
+        'Unique ID': primary_key,
+        'Enter your full name': Name,
+        'Enter your email address': Email_id,
+        "Enter your WhatsApp number (with country code, DONOT ADD '+'": Number,
+        'Enter your LinkedIn profile link here': Profile,
+        'Enter your current Institute/University/Organization': Institute,
+        'Current Job title/Designation*': Current_job,
+        'Highest degree obtained *': selected_optionss,
+        'Country you currently reside in*': selected_status,
+        'Your current city*': city,
+        'What communication languages are you comfortable in? *': selected_options,
+        'List two languages (other than english) you are proficient in s': language,
+        'Would you be available to participate in a two-hour training se': option,
+        'Main Subject Area (In case of no specialization, choose your fa': selected_option,
+        'Give us three keywords that associated with your current STEM w': keyword,
+        'How would you explain your current work to a broad undergraduat': description,
+        'How many hours per week are you wiling to commit for this mento': option2,
+        'For conducting mentoring sessions, please indicate your preferr': option3,
+        'What 4 technical skills/soft skills can you share with the ment': skills,
+        'Would you like to design a hands-on scientific project for this': option4,
+        'If yes, how would you design a home-lab based and/or computatio': if_yes,
+        'Upload your Curriculum Vitae/Resume *': uploaded_file.name if uploaded_file else None,
+        'If you have any comments, suggestions you want us to think abou': comments
+        
+    }
+
+    feedback_df = pd.DataFrame([data])
+    return feedback_df
+
+
+
+url: str = 'https://twetkfnfqdtsozephdse.supabase.co'
+key: str = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3ZXRrZm5mcWR0c296ZXBoZHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjE5Njk0MzcsImV4cCI6MjAzNzU0NTQzN30.D76H5RoTel0M7Wj6PTRSAXxxYGic7K25BSaeQDZqIN0'
+# Create a Supabase client
+supabase: Client = create_client(url, key,
+  options=ClientOptions(
+    postgrest_client_timeout=10,
+    storage_client_timeout=10,
+    schema="public",
+  ))
+
+
+combined_button_text = "Submit"   
+
+if st.button(combined_button_text):
+    feedback_df = create_feedback_dataframe(primary_key, Name, Email_id, Number, Profile, Institute, Current_job, selected_optionss, selected_status, city, selected_options, language, option, selected_option, keyword, description, option2, option3, skills, option4, if_yes,uploaded_file,comments)
+
+    # Prepare the JSON data
+    json_data = feedback_df[['Unique ID', 'Enter your full name', 'Enter your email address',"Enter your WhatsApp number (with country code, DONOT ADD '+'",'Enter your LinkedIn profile link here','Enter your current Institute/University/Organization','Current Job title/Designation*','Highest degree obtained *','Country you currently reside in*','Your current city*','What communication languages are you comfortable in? *','List two languages (other than english) you are proficient in s','Would you be available to participate in a two-hour training se','Main Subject Area (In case of no specialization, choose your fa','Give us three keywords that associated with your current STEM w','How would you explain your current work to a broad undergraduat','How many hours per week are you wiling to commit for this mento','For conducting mentoring sessions, please indicate your preferr','What 4 technical skills/soft skills can you share with the ment','Would you like to design a hands-on scientific project for this','If yes, how would you design a home-lab based and/or computatio','Upload your Curriculum Vitae/Resume *','If you have any comments, suggestions you want us to think abou']].to_dict(orient='records')[0]
+
+    table_name = "Registration"
+
+    # Insert the JSON data into Supabase
+    response_json = supabase.table(table_name).insert([json_data]).execute()
+
     
-else:
-    st.write("Code did not match. Further functionalities will not run.")
+   
+
+
+    
